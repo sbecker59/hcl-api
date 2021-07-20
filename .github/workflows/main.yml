@@ -1,47 +1,99 @@
-# This is a basic workflow to help you get started with Actions
+# # This is a basic workflow to help you get started with Actions
 
-name: CI
+# name: CI
 
-# Controls when the action will run. 
-on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+# # Controls when the action will run. 
+# on:
+#   # Triggers the workflow on push or pull request events but only for the main branch
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+#   # Allows you to run this workflow manually from the Actions tab
+#   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+# # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# jobs:
+#   # This workflow contains a single job called "build"
+#   build:
+#     # The type of runner that the job will run on
+#     runs-on: ubuntu-latest
 
-    env:
-      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-      WAYPOINT_SERVER_TLS: 1
-      WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
+#     env:
+#       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+#       WAYPOINT_SERVER_TLS: 1
+#       WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      - uses: actions/checkout@v2
+#     outputs:
+#       release: ${{ steps.waypoint.outputs.RELEASE }}
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-          export_default_credentials: true
+#     # Steps represent a sequence of tasks that will be executed as part of the job
+#     steps:
+#       - uses: actions/checkout@v2
 
-      - run: |
-          gcloud auth configure-docker -q
+#       - name: Set up Cloud SDK
+#         uses: google-github-actions/setup-gcloud@master
+#         with:
+#           project_id: ${{ secrets.GCP_PROJECT_ID }}
+#           service_account_key: ${{ secrets.GCP_SA_KEY }}
+#           export_default_credentials: true
 
-      - uses: hashicorp/action-setup-waypoint@main
-        with:
-          version: '0.2.2'
-      - run: waypoint init
-      - run: waypoint build
-      - run: waypoint deploy
+#       - run: |
+#           gcloud auth configure-docker -q
+
+#       - uses: hashicorp/action-setup-waypoint@main
+#         with:
+#           version: '0.4.1'
+#       - run: waypoint init
+#       - run: waypoint build
+#       - run: waypoint deploy
+#       - id: waypoint
+#         run: |
+#           echo "::set-output name=RELEASE::$(gcloud run services describe --region europe-north1 --platform managed hcl-api --format=json | jq -r .status.url)"
+
+
+#   k6_load_test:
+#     needs: build
+#     name: k6 Load Test
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v1
+
+#       - name: Run local k6 test
+#         uses: k6io/action@v0.1
+#         env:                                 
+#           BASE_URL: ${{ needs.build.outputs.release }}
+#         with:
+#           filename: k6/smoke-test.js
+
+  # destroy:
+  #   # The type of runner that the job will run on
+  #   needs: [ build, k6_load_test ]
+  #   runs-on: ubuntu-latest
+
+  #   env:
+  #     ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  #     WAYPOINT_SERVER_TLS: 1
+  #     WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
+
+  #   # Steps represent a sequence of tasks that will be executed as part of the job
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Set up Cloud SDK
+  #       uses: google-github-actions/setup-gcloud@master
+  #       with:
+  #         project_id: ${{ secrets.GCP_PROJECT_ID }}
+  #         service_account_key: ${{ secrets.GCP_SA_KEY }}
+  #         export_default_credentials: true
+
+  #     - run: |
+  #         gcloud auth configure-docker -q
+
+  #     - uses: hashicorp/action-setup-waypoint@main
+  #       with:
+  #         version: '0.4.1'
+  #     - run: waypoint destroy -auto-approve

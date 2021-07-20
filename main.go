@@ -6,8 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/hashicorp/hcl2/hclwrite"
+	muxtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gorilla/mux"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 func homePage(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +22,7 @@ func format(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 
-	myRouter := mux.NewRouter().StrictSlash(true)
+	myRouter := muxtrace.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
 	myRouter.HandleFunc("/format", format).Methods("POST")
 
@@ -31,5 +32,8 @@ func handleRequests() {
 }
 
 func main() {
+	tracer.Start()
+	defer tracer.Stop()
+
 	handleRequests()
 }

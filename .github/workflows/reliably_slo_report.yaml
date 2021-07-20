@@ -1,0 +1,13 @@
+name: Example to generate a SLO report
+on: push
+jobs:
+  slo-report:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: reliablyhq/actions/slo-report@v1
+      env:
+        RELIABLY_TOKEN: ${{ secrets.RELIABLY_TOKEN }}
+        RELIABLY_ORG: ${{ secrets.RELIABLY_ORG }}
+      with:
+        format: markdown

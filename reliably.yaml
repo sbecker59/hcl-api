@@ -1,0 +1,12 @@
+apiVersion: reliably.com/v1
+kind: Objective
+metadata:
+  labels:
+    name: 99.9% of requests  over last 7 days
+    service: mux.router
+spec:
+  indicatorSelector:
+    datadog_denominator_query: sum:trace.http.request.hits{service:mux.router}.as_count()
+    datadog_numerator_query: sum:trace.http.request.hits{service:mux.router,http.status_code:200}.as_count()
+  objectivePercent: 99.9
+  window: 168h0m0s
