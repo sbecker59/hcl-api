@@ -25,6 +25,9 @@ jobs:
       WAYPOINT_SERVER_TLS: 1
       WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
 
+    outputs:
+      release: ${{ steps.waypoint.outputs.RELEASE }}
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
@@ -41,15 +44,17 @@ jobs:
 
       - uses: hashicorp/action-setup-waypoint@main
         with:
-          version: '0.2.2'
+          version: '0.4.1'
       - run: waypoint init
       - run: waypoint build
       - run: waypoint deploy
-        id: waypoint
-      - run: |
-          echo "::set-output name=BASE_URL::$(gcloud run services describe --platform managed hcl-api --format=json | jq -r .status.url)"
+      - id: waypoint
+        run: |
+          echo "::set-output name=RELEASE::$(gcloud run services describe --region europe-north1 --platform managed hcl-api --format=json | jq -r .status.url)"
+
 
   k6_load_test:
+    needs: build
     name: k6 Load Test
     runs-on: ubuntu-latest
 
@@ -60,6 +65,35 @@ jobs:
       - name: Run local k6 test
         uses: k6io/action@v0.1
         env:                                 
-          BASE_URL: ${{ steps.waypoint.outputs.BASE_URL }}
+          BASE_URL: ${{ needs.build.outputs.release }}
         with:
           filename: k6/smoke-test.js
+
+  # destroy:
+  #   # The type of runner that the job will run on
+  #   needs: [ build, k6_load_test ]
+  #   runs-on: ubuntu-latest
+
+  #   env:
+  #     ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+  #     WAYPOINT_SERVER_TLS: 1
+  #     WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
+
+  #   # Steps represent a sequence of tasks that will be executed as part of the job
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Set up Cloud SDK
+  #       uses: google-github-actions/setup-gcloud@master
+  #       with:
+  #         project_id: ${{ secrets.GCP_PROJECT_ID }}
+  #         service_account_key: ${{ secrets.GCP_SA_KEY }}
+  #         export_default_credentials: true
+
+  #     - run: |
+  #         gcloud auth configure-docker -q
+
+  #     - uses: hashicorp/action-setup-waypoint@main
+  #       with:
+  #         version: '0.4.1'
+  #     - run: waypoint destroy -auto-approve

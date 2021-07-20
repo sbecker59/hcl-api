@@ -10,8 +10,6 @@ export let options = {
   },
 };
 
-const BASE_URL = 'https://hcl-api-x4b6y6lhaa-lz.a.run.app';
-
 export default () => {
 
   let data = `module "foo" {
@@ -24,7 +22,7 @@ export default () => {
     abcde = "456"
     }`
 
-  let res = http.post(`${BASE_URL}/format`, data);
+  let res = http.post(`${__ENV.BASE_URL}/format`, data);
   check(res, { 'status was 200': (r) => r.status == 200 });
 
   sleep(1);
